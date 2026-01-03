@@ -103,21 +103,21 @@ const InstagramChat = () => {
         setSelectedChat(null);
     };
 
-      if (activeCall) {
-    return activeCall.type === 'video' ? (
-      <VideoCall
-        roomName={activeCall.roomName}
-        userName={activeCall.userName}
-        onEndCall={handleEndCall}
-      />
-    ) : (
-      <VoiceCall
-        userName={activeCall.userName}
-        callTo={activeCall.callTo}
-        onEndCall={handleEndCall}
-      />
-    );
-  }
+    if (activeCall) {
+        return activeCall.type === 'video' ? (
+            <VideoCall
+                roomName={activeCall.roomName}
+                userName={activeCall.userName}
+                onEndCall={handleEndCall}
+            />
+        ) : (
+            <VoiceCall
+                userName={activeCall.userName}
+                callTo={activeCall.callTo}
+                onEndCall={handleEndCall}
+            />
+        );
+    }
 
     return (
         <div className="flex h-screen bg-white overflow-hidden">
@@ -134,7 +134,7 @@ const InstagramChat = () => {
                         chat={selectedChat}
                         onBack={handleBackToChats}
                         isMobileView={isMobileView}
-                       onVoiceCall={handleVoiceCall}
+                        onVoiceCall={handleVoiceCall}
                         onVideoCall={handleVideoCall}
                     />
 
@@ -156,7 +156,7 @@ const InstagramChat = () => {
 
                         isRecording={isRecording}
                         onStartRecording={startRecording}
-                        
+
                         stopRecording={stopRecording}
                     />
                 </div>

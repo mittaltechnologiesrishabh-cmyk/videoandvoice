@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Video from 'twilio-video';
 // If you lose your phone, or don’t have access to your verification device,
 // this code is your failsafe to access your account.
-// YZ8CNBQH9ELWU6G6YQVTMQ28
+
 export const useVideoCall = () => {
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState([]);
