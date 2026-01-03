@@ -8,10 +8,39 @@ import RecordingIndicator from './chat/RecordingIndicator';
 import { useChat } from '../hooks/useChat';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
 
+import VideoCall from './chat/VideoCall';
+import VoiceCall from './chat/VoiceCall';
+
 const InstagramChat = () => {
     const { chats, selectedChat, setSelectedChat, isMobileView, addMessage } = useChat();
     const [messageInput, setMessageInput] = useState('');
     const [selectedImages, setSelectedImages] = useState([]);
+
+    // ---- CALL STATE ----
+    const [activeCall, setActiveCall] = useState(null);
+    const currentUser = "user123";
+
+    const handleVideoCall = () => {
+        setActiveCall({
+            type: 'video',
+            roomName: `room-${Date.now()}`,
+            userName: currentUser
+        });
+    };
+
+    const handleVoiceCall = () => {
+        if (!selectedChat) return;
+        setActiveCall({
+            type: 'voice',
+            userName: currentUser,
+            callTo: selectedChat.id
+        });
+    };
+
+    const handleEndCall = () => {
+        setActiveCall(null);
+    };
+
 
     const handleRecordingComplete = (audioUrl, duration) => {
         const voiceMessage = {
@@ -74,6 +103,22 @@ const InstagramChat = () => {
         setSelectedChat(null);
     };
 
+      if (activeCall) {
+    return activeCall.type === 'video' ? (
+      <VideoCall
+        roomName={activeCall.roomName}
+        userName={activeCall.userName}
+        onEndCall={handleEndCall}
+      />
+    ) : (
+      <VoiceCall
+        userName={activeCall.userName}
+        callTo={activeCall.callTo}
+        onEndCall={handleEndCall}
+      />
+    );
+  }
+
     return (
         <div className="flex h-screen bg-white overflow-hidden">
             <ChatList
@@ -89,8 +134,8 @@ const InstagramChat = () => {
                         chat={selectedChat}
                         onBack={handleBackToChats}
                         isMobileView={isMobileView}
-                        onVoiceCall={() => console.log('Voice call')}
-                        onVideoCall={() => console.log('Video call')}
+                       onVoiceCall={handleVoiceCall}
+                        onVideoCall={handleVideoCall}
                     />
 
                     <MessageList messages={selectedChat.messages} />
