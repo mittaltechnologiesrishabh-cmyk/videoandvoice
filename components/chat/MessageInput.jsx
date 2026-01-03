@@ -10,6 +10,7 @@ const MessageInput = ({
   onStartRecording,
   isRecording,
   hasImages
+
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
@@ -75,7 +76,7 @@ const MessageInput = ({
           className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-full focus:outline-none focus:border-[#2755ff]"
         />
 
-        {messageInput.trim() || hasImages ? (
+       {messageInput.trim() || hasImages.length > 0 ? (
           <button
             onClick={onSendMessage}
             className="p-2 hover:bg-[#2755ff]/10 rounded-full transition"

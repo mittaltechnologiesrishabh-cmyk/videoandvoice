@@ -151,9 +151,12 @@ const InstagramChat = () => {
                         setMessageInput={setMessageInput}
                         onSendMessage={handleSendMessage}
                         onImageSelect={handleImageSelect}
-                        selectedImages={selectedImages}
+
+                        hasImages={selectedImages}
+
                         isRecording={isRecording}
-                        startRecording={startRecording}
+                        onStartRecording={startRecording}
+                        
                         stopRecording={stopRecording}
                     />
                 </div>
