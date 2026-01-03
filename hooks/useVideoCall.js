@@ -1,12 +1,12 @@
 // import { useState, useRef, useEffect } from 'react';
 // import Video from 'twilio-video';
-// // If you lose your phone, or don’t have access to your verification device,
-// // this code is your failsafe to access your account.
 
 // export const useVideoCall = () => {
 //   const [room, setRoom] = useState(null);
 //   const [participants, setParticipants] = useState([]);
 //   const [isConnecting, setIsConnecting] = useState(false);
+//   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+//   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
 //   const localVideoRef = useRef(null);
 //   const remoteVideoRef = useRef(null);
 
@@ -29,26 +29,33 @@
 //       const room = await Video.connect(token, {
 //         name: roomName,
 //         audio: true,
-//         video: { width: 640 },
+//         video: { width: 640, height: 480 },
 //       });
 
 //       setRoom(room);
 
-//       // Attach local video
-//       room.localParticipant.videoTracks.forEach((publication) => {
-//         if (localVideoRef.current) {
+//       // Clear and attach local video
+//       if (localVideoRef.current) {
+//         localVideoRef.current.innerHTML = ''; // Clear existing content
+//         room.localParticipant.videoTracks.forEach((publication) => {
 //           const track = publication.track;
-//           localVideoRef.current.appendChild(track.attach());
-//         }
-//       });
+//           const videoElement = track.attach();
+//           videoElement.style.width = '100%';
+//           videoElement.style.height = '100%';
+//           videoElement.style.objectFit = 'cover';
+//           localVideoRef.current.appendChild(videoElement);
+//         });
+//       }
 
 //       // Handle participant connections
 //       room.on('participantConnected', (participant) => {
+//         console.log(`Participant connected: ${participant.identity}`);
 //         setParticipants((prev) => [...prev, participant]);
 //         attachParticipantTracks(participant);
 //       });
 
 //       room.on('participantDisconnected', (participant) => {
+//         console.log(`Participant disconnected: ${participant.identity}`);
 //         setParticipants((prev) => prev.filter((p) => p !== participant));
 //         detachParticipantTracks(participant);
 //       });
@@ -62,28 +69,57 @@
 //       setIsConnecting(false);
 //     } catch (error) {
 //       console.error('Error connecting to room:', error);
+//       alert('Failed to connect: ' + error.message);
 //       setIsConnecting(false);
 //     }
 //   };
 
 //   const attachParticipantTracks = (participant) => {
+//     // Clear remote video container
+//     if (remoteVideoRef.current) {
+//       remoteVideoRef.current.innerHTML = '';
+//     }
+
+//     // Attach existing tracks
 //     participant.tracks.forEach((publication) => {
-//       if (publication.track && remoteVideoRef.current) {
-//         remoteVideoRef.current.appendChild(publication.track.attach());
+//       if (publication.isSubscribed && publication.track) {
+//         attachTrack(publication.track);
 //       }
 //     });
 
+//     // Handle new tracks
 //     participant.on('trackSubscribed', (track) => {
-//       if (remoteVideoRef.current) {
-//         remoteVideoRef.current.appendChild(track.attach());
-//       }
+//       console.log('Track subscribed:', track.kind);
+//       attachTrack(track);
 //     });
+
+//     participant.on('trackUnsubscribed', (track) => {
+//       console.log('Track unsubscribed:', track.kind);
+//       detachTrack(track);
+//     });
+//   };
+
+//   const attachTrack = (track) => {
+//     if (track.kind === 'video' && remoteVideoRef.current) {
+//       const videoElement = track.attach();
+//       videoElement.style.width = '100%';
+//       videoElement.style.height = '100%';
+//       videoElement.style.objectFit = 'cover';
+//       remoteVideoRef.current.appendChild(videoElement);
+//     } else if (track.kind === 'audio') {
+//       const audioElement = track.attach();
+//       document.body.appendChild(audioElement);
+//     }
+//   };
+
+//   const detachTrack = (track) => {
+//     track.detach().forEach((element) => element.remove());
 //   };
 
 //   const detachParticipantTracks = (participant) => {
 //     participant.tracks.forEach((publication) => {
 //       if (publication.track) {
-//         publication.track.detach().forEach((element) => element.remove());
+//         detachTrack(publication.track);
 //       }
 //     });
 //   };
@@ -91,6 +127,15 @@
 //   const disconnectFromRoom = () => {
 //     if (room) {
 //       room.disconnect();
+      
+//       // Clean up video elements
+//       if (localVideoRef.current) {
+//         localVideoRef.current.innerHTML = '';
+//       }
+//       if (remoteVideoRef.current) {
+//         remoteVideoRef.current.innerHTML = '';
+//       }
+      
 //       setRoom(null);
 //       setParticipants([]);
 //     }
@@ -101,8 +146,10 @@
 //       room.localParticipant.audioTracks.forEach((publication) => {
 //         if (publication.track.isEnabled) {
 //           publication.track.disable();
+//           setIsAudioEnabled(false);
 //         } else {
 //           publication.track.enable();
+//           setIsAudioEnabled(true);
 //         }
 //       });
 //     }
@@ -113,8 +160,10 @@
 //       room.localParticipant.videoTracks.forEach((publication) => {
 //         if (publication.track.isEnabled) {
 //           publication.track.disable();
+//           setIsVideoEnabled(false);
 //         } else {
 //           publication.track.enable();
+//           setIsVideoEnabled(true);
 //         }
 //       });
 //     }
@@ -132,6 +181,8 @@
 //     room,
 //     participants,
 //     isConnecting,
+//     isAudioEnabled,
+//     isVideoEnabled,
 //     localVideoRef,
 //     remoteVideoRef,
 //     connectToRoom,
@@ -150,6 +201,7 @@ export const useVideoCall = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [localStream, setLocalStream] = useState(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
 
@@ -166,47 +218,61 @@ export const useVideoCall = () => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Failed to get token');
+      }
+
       const data = await response.json();
       const token = data.token;
 
-      const room = await Video.connect(token, {
+      // Connect to Twilio room
+      const connectedRoom = await Video.connect(token, {
         name: roomName,
         audio: true,
-        video: { width: 640, height: 480 },
+        video: { width: 640, height: 480, frameRate: 24 },
+        dominantSpeaker: true,
       });
 
-      setRoom(room);
+      console.log('Connected to room:', connectedRoom.name);
+      setRoom(connectedRoom);
 
-      // Clear and attach local video
-      if (localVideoRef.current) {
-        localVideoRef.current.innerHTML = ''; // Clear existing content
-        room.localParticipant.videoTracks.forEach((publication) => {
-          const track = publication.track;
-          const videoElement = track.attach();
-          videoElement.style.width = '100%';
-          videoElement.style.height = '100%';
-          videoElement.style.objectFit = 'cover';
-          localVideoRef.current.appendChild(videoElement);
+      // Attach local participant tracks
+      const localParticipant = connectedRoom.localParticipant;
+      console.log('Local participant:', localParticipant.identity);
+
+      // Attach local video and audio tracks
+      localParticipant.tracks.forEach((publication) => {
+        if (publication.track) {
+          attachLocalTrack(publication.track);
+        }
+      });
+
+      // Handle remote participants already in room
+      connectedRoom.participants.forEach((participant) => {
+        console.log('Existing participant:', participant.identity);
+        handleParticipantConnected(participant);
+      });
+
+      // Handle new participant connections
+      connectedRoom.on('participantConnected', (participant) => {
+        console.log('Participant connected:', participant.identity);
+        handleParticipantConnected(participant);
+      });
+
+      // Handle participant disconnections
+      connectedRoom.on('participantDisconnected', (participant) => {
+        console.log('Participant disconnected:', participant.identity);
+        handleParticipantDisconnected(participant);
+      });
+
+      // Handle room disconnection
+      connectedRoom.on('disconnected', (room) => {
+        console.log('Disconnected from room');
+        room.localParticipant.tracks.forEach((publication) => {
+          if (publication.track) {
+            publication.track.stop();
+          }
         });
-      }
-
-      // Handle participant connections
-      room.on('participantConnected', (participant) => {
-        console.log(`Participant connected: ${participant.identity}`);
-        setParticipants((prev) => [...prev, participant]);
-        attachParticipantTracks(participant);
-      });
-
-      room.on('participantDisconnected', (participant) => {
-        console.log(`Participant disconnected: ${participant.identity}`);
-        setParticipants((prev) => prev.filter((p) => p !== participant));
-        detachParticipantTracks(participant);
-      });
-
-      // Attach existing participants
-      room.participants.forEach((participant) => {
-        setParticipants((prev) => [...prev, participant]);
-        attachParticipantTracks(participant);
       });
 
       setIsConnecting(false);
@@ -217,61 +283,93 @@ export const useVideoCall = () => {
     }
   };
 
-  const attachParticipantTracks = (participant) => {
-    // Clear remote video container
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.innerHTML = '';
-    }
+  const attachLocalTrack = (track) => {
+    if (track.kind === 'video' && localVideoRef.current) {
+      // Remove existing video elements
+      const existingVideo = localVideoRef.current.querySelector('video');
+      if (existingVideo) {
+        existingVideo.remove();
+      }
 
-    // Attach existing tracks
+      // Create and attach new video element
+      const videoElement = track.attach();
+      videoElement.style.width = '100%';
+      videoElement.style.height = '100%';
+      videoElement.style.objectFit = 'cover';
+      videoElement.style.transform = 'scaleX(-1)'; // Mirror local video
+      localVideoRef.current.appendChild(videoElement);
+      
+      setLocalStream(track);
+    }
+  };
+
+  const handleParticipantConnected = (participant) => {
+    setParticipants((prev) => [...prev, participant]);
+
+    // Attach tracks that are already published
     participant.tracks.forEach((publication) => {
       if (publication.isSubscribed && publication.track) {
-        attachTrack(publication.track);
+        attachRemoteTrack(publication.track);
       }
     });
 
-    // Handle new tracks
+    // Listen for new tracks
     participant.on('trackSubscribed', (track) => {
-      console.log('Track subscribed:', track.kind);
-      attachTrack(track);
+      console.log('Track subscribed:', track.kind, 'from', participant.identity);
+      attachRemoteTrack(track);
     });
 
+    // Listen for track unsubscribed
     participant.on('trackUnsubscribed', (track) => {
       console.log('Track unsubscribed:', track.kind);
-      detachTrack(track);
+      detachRemoteTrack(track);
     });
   };
 
-  const attachTrack = (track) => {
+  const handleParticipantDisconnected = (participant) => {
+    setParticipants((prev) => prev.filter((p) => p !== participant));
+    
+    // Detach all tracks from this participant
+    participant.tracks.forEach((publication) => {
+      if (publication.track) {
+        detachRemoteTrack(publication.track);
+      }
+    });
+  };
+
+  const attachRemoteTrack = (track) => {
     if (track.kind === 'video' && remoteVideoRef.current) {
+      // Remove existing video if any
+      const existingVideo = remoteVideoRef.current.querySelector('video');
+      if (existingVideo) {
+        existingVideo.remove();
+      }
+
+      // Create and attach video element
       const videoElement = track.attach();
       videoElement.style.width = '100%';
       videoElement.style.height = '100%';
       videoElement.style.objectFit = 'cover';
       remoteVideoRef.current.appendChild(videoElement);
     } else if (track.kind === 'audio') {
+      // Attach audio track
       const audioElement = track.attach();
       document.body.appendChild(audioElement);
     }
   };
 
-  const detachTrack = (track) => {
-    track.detach().forEach((element) => element.remove());
-  };
-
-  const detachParticipantTracks = (participant) => {
-    participant.tracks.forEach((publication) => {
-      if (publication.track) {
-        detachTrack(publication.track);
-      }
+  const detachRemoteTrack = (track) => {
+    track.detach().forEach((element) => {
+      element.remove();
     });
   };
 
   const disconnectFromRoom = () => {
     if (room) {
+      console.log('Disconnecting from room...');
       room.disconnect();
       
-      // Clean up video elements
+      // Clear video containers
       if (localVideoRef.current) {
         localVideoRef.current.innerHTML = '';
       }
@@ -281,34 +379,35 @@ export const useVideoCall = () => {
       
       setRoom(null);
       setParticipants([]);
+      setLocalStream(null);
     }
   };
 
   const toggleAudio = () => {
     if (room) {
+      const enabled = !isAudioEnabled;
       room.localParticipant.audioTracks.forEach((publication) => {
-        if (publication.track.isEnabled) {
-          publication.track.disable();
-          setIsAudioEnabled(false);
-        } else {
+        if (enabled) {
           publication.track.enable();
-          setIsAudioEnabled(true);
+        } else {
+          publication.track.disable();
         }
       });
+      setIsAudioEnabled(enabled);
     }
   };
 
   const toggleVideo = () => {
     if (room) {
+      const enabled = !isVideoEnabled;
       room.localParticipant.videoTracks.forEach((publication) => {
-        if (publication.track.isEnabled) {
-          publication.track.disable();
-          setIsVideoEnabled(false);
-        } else {
+        if (enabled) {
           publication.track.enable();
-          setIsVideoEnabled(true);
+        } else {
+          publication.track.disable();
         }
       });
+      setIsVideoEnabled(enabled);
     }
   };
 
