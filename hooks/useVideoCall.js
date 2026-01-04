@@ -1,199 +1,5 @@
-// import { useState, useRef, useEffect } from 'react';
-// import Video from 'twilio-video';
-
-// export const useVideoCall = () => {
-//   const [room, setRoom] = useState(null);
-//   const [participants, setParticipants] = useState([]);
-//   const [isConnecting, setIsConnecting] = useState(false);
-//   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-//   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-//   const localVideoRef = useRef(null);
-//   const remoteVideoRef = useRef(null);
-
-//   const connectToRoom = async (roomName, userName) => {
-//     setIsConnecting(true);
-//     try {
-//       const response = await fetch('/api/twilio-token', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({
-//           identity: userName,
-//           roomName: roomName,
-//           callType: 'video',
-//         }),
-//       });
-
-//       const data = await response.json();
-//       const token = data.token;
-
-//       const room = await Video.connect(token, {
-//         name: roomName,
-//         audio: true,
-//         video: { width: 640, height: 480 },
-//       });
-
-//       setRoom(room);
-
-//       // Clear and attach local video
-//       if (localVideoRef.current) {
-//         localVideoRef.current.innerHTML = ''; // Clear existing content
-//         room.localParticipant.videoTracks.forEach((publication) => {
-//           const track = publication.track;
-//           const videoElement = track.attach();
-//           videoElement.style.width = '100%';
-//           videoElement.style.height = '100%';
-//           videoElement.style.objectFit = 'cover';
-//           localVideoRef.current.appendChild(videoElement);
-//         });
-//       }
-
-//       // Handle participant connections
-//       room.on('participantConnected', (participant) => {
-//         console.log(`Participant connected: ${participant.identity}`);
-//         setParticipants((prev) => [...prev, participant]);
-//         attachParticipantTracks(participant);
-//       });
-
-//       room.on('participantDisconnected', (participant) => {
-//         console.log(`Participant disconnected: ${participant.identity}`);
-//         setParticipants((prev) => prev.filter((p) => p !== participant));
-//         detachParticipantTracks(participant);
-//       });
-
-//       // Attach existing participants
-//       room.participants.forEach((participant) => {
-//         setParticipants((prev) => [...prev, participant]);
-//         attachParticipantTracks(participant);
-//       });
-
-//       setIsConnecting(false);
-//     } catch (error) {
-//       console.error('Error connecting to room:', error);
-//       alert('Failed to connect: ' + error.message);
-//       setIsConnecting(false);
-//     }
-//   };
-
-//   const attachParticipantTracks = (participant) => {
-//     // Clear remote video container
-//     if (remoteVideoRef.current) {
-//       remoteVideoRef.current.innerHTML = '';
-//     }
-
-//     // Attach existing tracks
-//     participant.tracks.forEach((publication) => {
-//       if (publication.isSubscribed && publication.track) {
-//         attachTrack(publication.track);
-//       }
-//     });
-
-//     // Handle new tracks
-//     participant.on('trackSubscribed', (track) => {
-//       console.log('Track subscribed:', track.kind);
-//       attachTrack(track);
-//     });
-
-//     participant.on('trackUnsubscribed', (track) => {
-//       console.log('Track unsubscribed:', track.kind);
-//       detachTrack(track);
-//     });
-//   };
-
-//   const attachTrack = (track) => {
-//     if (track.kind === 'video' && remoteVideoRef.current) {
-//       const videoElement = track.attach();
-//       videoElement.style.width = '100%';
-//       videoElement.style.height = '100%';
-//       videoElement.style.objectFit = 'cover';
-//       remoteVideoRef.current.appendChild(videoElement);
-//     } else if (track.kind === 'audio') {
-//       const audioElement = track.attach();
-//       document.body.appendChild(audioElement);
-//     }
-//   };
-
-//   const detachTrack = (track) => {
-//     track.detach().forEach((element) => element.remove());
-//   };
-
-//   const detachParticipantTracks = (participant) => {
-//     participant.tracks.forEach((publication) => {
-//       if (publication.track) {
-//         detachTrack(publication.track);
-//       }
-//     });
-//   };
-
-//   const disconnectFromRoom = () => {
-//     if (room) {
-//       room.disconnect();
-      
-//       // Clean up video elements
-//       if (localVideoRef.current) {
-//         localVideoRef.current.innerHTML = '';
-//       }
-//       if (remoteVideoRef.current) {
-//         remoteVideoRef.current.innerHTML = '';
-//       }
-      
-//       setRoom(null);
-//       setParticipants([]);
-//     }
-//   };
-
-//   const toggleAudio = () => {
-//     if (room) {
-//       room.localParticipant.audioTracks.forEach((publication) => {
-//         if (publication.track.isEnabled) {
-//           publication.track.disable();
-//           setIsAudioEnabled(false);
-//         } else {
-//           publication.track.enable();
-//           setIsAudioEnabled(true);
-//         }
-//       });
-//     }
-//   };
-
-//   const toggleVideo = () => {
-//     if (room) {
-//       room.localParticipant.videoTracks.forEach((publication) => {
-//         if (publication.track.isEnabled) {
-//           publication.track.disable();
-//           setIsVideoEnabled(false);
-//         } else {
-//           publication.track.enable();
-//           setIsVideoEnabled(true);
-//         }
-//       });
-//     }
-//   };
-
-//   useEffect(() => {
-//     return () => {
-//       if (room) {
-//         room.disconnect();
-//       }
-//     };
-//   }, [room]);
-
-//   return {
-//     room,
-//     participants,
-//     isConnecting,
-//     isAudioEnabled,
-//     isVideoEnabled,
-//     localVideoRef,
-//     remoteVideoRef,
-//     connectToRoom,
-//     disconnectFromRoom,
-//     toggleAudio,
-//     toggleVideo,
-//   };
-// };
-
-import { useState, useRef, useEffect } from 'react';
-import Video from 'twilio-video';
+import { useEffect, useRef, useState } from "react";
+import Video from "twilio-video";
 
 export const useVideoCall = () => {
   const [room, setRoom] = useState(null);
@@ -201,134 +7,166 @@ export const useVideoCall = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [localStream, setLocalStream] = useState(null);
+  const [error, setError] = useState(null);
+
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const localTracksRef = useRef([]);
 
   const connectToRoom = async (roomName, userName) => {
+    if (!roomName || !userName) {
+      setError("Room name and user name are required");
+      return;
+    }
+
     setIsConnecting(true);
+    setError(null);
+
     try {
-      const response = await fetch('/api/twilio-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      console.log("🔄 Requesting token for:", userName, "in room:", roomName);
+
+      const response = await fetch("/api/twilio-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           identity: userName,
           roomName: roomName,
-          callType: 'video',
+          callType: "video",
         }),
       });
 
+      console.log("📡 Response status:", response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to get token');
+        const errorData = await response.json();
+        console.error("❌ API Error:", errorData);
+        throw new Error(errorData.error || "Failed to get token");
       }
 
       const data = await response.json();
-      const token = data.token;
+      console.log("✅ Token received successfully");
 
       // Connect to Twilio room
-      const connectedRoom = await Video.connect(token, {
+      const connectedRoom = await Video.connect(data.token, {
         name: roomName,
         audio: true,
-        video: { width: 640, height: 480, frameRate: 24 },
+        video: {
+          width: 640,
+          height: 480,
+          frameRate: 24,
+        },
         dominantSpeaker: true,
+        networkQuality: {
+          local: 1,
+          remote: 1,
+        },
       });
 
-      console.log('Connected to room:', connectedRoom.name);
+      console.log("✅ Successfully connected to room:", connectedRoom.name);
       setRoom(connectedRoom);
 
-      // Attach local participant tracks
-      const localParticipant = connectedRoom.localParticipant;
-      console.log('Local participant:', localParticipant.identity);
+      // Store local tracks
+      localTracksRef.current = Array.from(
+        connectedRoom.localParticipant.tracks.values()
+      )
+        .map((publication) => publication.track)
+        .filter((track) => track !== null);
 
-      // Attach local video and audio tracks
-      localParticipant.tracks.forEach((publication) => {
-        if (publication.track) {
+      // Attach local video
+      connectedRoom.localParticipant.videoTracks.forEach((publication) => {
+        if (publication.track && localVideoRef.current) {
           attachLocalTrack(publication.track);
         }
       });
 
-      // Handle remote participants already in room
+      // Handle existing participants
       connectedRoom.participants.forEach((participant) => {
-        console.log('Existing participant:', participant.identity);
-        handleParticipantConnected(participant);
+        console.log("👤 Existing participant:", participant.identity);
+        participantConnected(participant);
       });
 
       // Handle new participant connections
-      connectedRoom.on('participantConnected', (participant) => {
-        console.log('Participant connected:', participant.identity);
-        handleParticipantConnected(participant);
+      connectedRoom.on("participantConnected", (participant) => {
+        console.log("👤 Participant joined:", participant.identity);
+        participantConnected(participant);
       });
 
       // Handle participant disconnections
-      connectedRoom.on('participantDisconnected', (participant) => {
-        console.log('Participant disconnected:', participant.identity);
-        handleParticipantDisconnected(participant);
+      connectedRoom.on("participantDisconnected", (participant) => {
+        console.log("👋 Participant left:", participant.identity);
+        participantDisconnected(participant);
       });
 
-      // Handle room disconnection
-      connectedRoom.on('disconnected', (room) => {
-        console.log('Disconnected from room');
-        room.localParticipant.tracks.forEach((publication) => {
-          if (publication.track) {
-            publication.track.stop();
-          }
-        });
+      // Handle disconnection
+      connectedRoom.on("disconnected", (room, error) => {
+        console.log("🔌 Disconnected from room");
+        if (error) {
+          console.error("Disconnection error:", error);
+        }
+        cleanupRoom();
       });
 
       setIsConnecting(false);
     } catch (error) {
-      console.error('Error connecting to room:', error);
-      alert('Failed to connect: ' + error.message);
+      console.error("❌ Error connecting to room:", error);
+      setError(error.message);
       setIsConnecting(false);
+      alert("Failed to connect: " + error.message);
     }
   };
 
   const attachLocalTrack = (track) => {
-    if (track.kind === 'video' && localVideoRef.current) {
-      // Remove existing video elements
-      const existingVideo = localVideoRef.current.querySelector('video');
-      if (existingVideo) {
-        existingVideo.remove();
+    if (track.kind === "video" && localVideoRef.current) {
+      // Clear existing videos
+      while (localVideoRef.current.firstChild) {
+        localVideoRef.current.firstChild.remove();
       }
 
-      // Create and attach new video element
       const videoElement = track.attach();
-      videoElement.style.width = '100%';
-      videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'cover';
-      videoElement.style.transform = 'scaleX(-1)'; // Mirror local video
+      videoElement.style.width = "100%";
+      videoElement.style.height = "100%";
+      videoElement.style.objectFit = "cover";
+      videoElement.style.transform = "scaleX(-1)"; // Mirror effect
       localVideoRef.current.appendChild(videoElement);
-      
-      setLocalStream(track);
+      console.log("📹 Local video attached");
     }
   };
 
-  const handleParticipantConnected = (participant) => {
-    setParticipants((prev) => [...prev, participant]);
+  const participantConnected = (participant) => {
+    setParticipants((prevParticipants) => {
+      // Avoid duplicates
+      if (prevParticipants.find((p) => p.sid === participant.sid)) {
+        return prevParticipants;
+      }
+      return [...prevParticipants, participant];
+    });
 
-    // Attach tracks that are already published
+    // Attach existing published tracks
     participant.tracks.forEach((publication) => {
-      if (publication.isSubscribed && publication.track) {
+      if (publication.track) {
         attachRemoteTrack(publication.track);
       }
     });
 
-    // Listen for new tracks
-    participant.on('trackSubscribed', (track) => {
-      console.log('Track subscribed:', track.kind, 'from', participant.identity);
+    // Handle track subscriptions
+    participant.on("trackSubscribed", (track) => {
+      console.log("🎬 Track subscribed:", track.kind);
       attachRemoteTrack(track);
     });
 
-    // Listen for track unsubscribed
-    participant.on('trackUnsubscribed', (track) => {
-      console.log('Track unsubscribed:', track.kind);
+    participant.on("trackUnsubscribed", (track) => {
+      console.log("⏹️ Track unsubscribed:", track.kind);
       detachRemoteTrack(track);
     });
   };
 
-  const handleParticipantDisconnected = (participant) => {
-    setParticipants((prev) => prev.filter((p) => p !== participant));
-    
+  const participantDisconnected = (participant) => {
+    setParticipants((prevParticipants) =>
+      prevParticipants.filter((p) => p.sid !== participant.sid)
+    );
+
     // Detach all tracks from this participant
     participant.tracks.forEach((publication) => {
       if (publication.track) {
@@ -338,23 +176,22 @@ export const useVideoCall = () => {
   };
 
   const attachRemoteTrack = (track) => {
-    if (track.kind === 'video' && remoteVideoRef.current) {
-      // Remove existing video if any
-      const existingVideo = remoteVideoRef.current.querySelector('video');
-      if (existingVideo) {
-        existingVideo.remove();
+    if (track.kind === "video" && remoteVideoRef.current) {
+      // Clear existing remote videos
+      while (remoteVideoRef.current.firstChild) {
+        remoteVideoRef.current.firstChild.remove();
       }
 
-      // Create and attach video element
       const videoElement = track.attach();
-      videoElement.style.width = '100%';
-      videoElement.style.height = '100%';
-      videoElement.style.objectFit = 'cover';
+      videoElement.style.width = "100%";
+      videoElement.style.height = "100%";
+      videoElement.style.objectFit = "cover";
       remoteVideoRef.current.appendChild(videoElement);
-    } else if (track.kind === 'audio') {
-      // Attach audio track
+      console.log("📹 Remote video attached");
+    } else if (track.kind === "audio") {
       const audioElement = track.attach();
       document.body.appendChild(audioElement);
+      console.log("🔊 Remote audio attached");
     }
   };
 
@@ -364,22 +201,30 @@ export const useVideoCall = () => {
     });
   };
 
+  const cleanupRoom = () => {
+    // Clear video containers
+    if (localVideoRef.current) {
+      localVideoRef.current.innerHTML = "";
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.innerHTML = "";
+    }
+
+    // Stop local tracks
+    localTracksRef.current.forEach((track) => {
+      track.stop();
+    });
+    localTracksRef.current = [];
+
+    setRoom(null);
+    setParticipants([]);
+  };
+
   const disconnectFromRoom = () => {
     if (room) {
-      console.log('Disconnecting from room...');
+      console.log("🔌 Disconnecting from room...");
       room.disconnect();
-      
-      // Clear video containers
-      if (localVideoRef.current) {
-        localVideoRef.current.innerHTML = '';
-      }
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.innerHTML = '';
-      }
-      
-      setRoom(null);
-      setParticipants([]);
-      setLocalStream(null);
+      cleanupRoom();
     }
   };
 
@@ -394,6 +239,7 @@ export const useVideoCall = () => {
         }
       });
       setIsAudioEnabled(enabled);
+      console.log("🎤 Audio:", enabled ? "ON" : "OFF");
     }
   };
 
@@ -408,13 +254,16 @@ export const useVideoCall = () => {
         }
       });
       setIsVideoEnabled(enabled);
+      console.log("📹 Video:", enabled ? "ON" : "OFF");
     }
   };
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (room) {
         room.disconnect();
+        cleanupRoom();
       }
     };
   }, [room]);
@@ -425,6 +274,7 @@ export const useVideoCall = () => {
     isConnecting,
     isAudioEnabled,
     isVideoEnabled,
+    error,
     localVideoRef,
     remoteVideoRef,
     connectToRoom,
