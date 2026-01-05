@@ -65,6 +65,11 @@ export const useVideoCall = () => {
       });
 
       console.log("✅ Successfully connected to room:", connectedRoom.name);
+      console.log(
+        "👤 Local participant:",
+        connectedRoom.localParticipant.identity
+      );
+
       setRoom(connectedRoom);
 
       // Store local tracks
@@ -74,12 +79,15 @@ export const useVideoCall = () => {
         .map((publication) => publication.track)
         .filter((track) => track !== null);
 
-      // Attach local video
-      connectedRoom.localParticipant.videoTracks.forEach((publication) => {
-        if (publication.track && localVideoRef.current) {
-          attachLocalTrack(publication.track);
-        }
-      });
+      // Attach local video with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        connectedRoom.localParticipant.videoTracks.forEach((publication) => {
+          console.log("📹 Local video track found:", publication.track);
+          if (publication.track && localVideoRef.current) {
+            attachLocalTrack(publication.track);
+          }
+        });
+      }, 100);
 
       // Handle existing participants
       connectedRoom.participants.forEach((participant) => {
@@ -113,28 +121,49 @@ export const useVideoCall = () => {
       console.error("❌ Error connecting to room:", error);
       setError(error.message);
       setIsConnecting(false);
-      alert("Failed to connect: " + error.message);
     }
   };
 
   const attachLocalTrack = (track) => {
-    if (track.kind === "video" && localVideoRef.current) {
-      // Clear existing videos
-      while (localVideoRef.current.firstChild) {
-        localVideoRef.current.firstChild.remove();
-      }
+    console.log("🎬 Attaching local track:", track.kind, track.name);
 
-      const videoElement = track.attach();
-      videoElement.style.width = "100%";
-      videoElement.style.height = "100%";
-      videoElement.style.objectFit = "cover";
-      videoElement.style.transform = "scaleX(-1)"; // Mirror effect
-      localVideoRef.current.appendChild(videoElement);
-      console.log("📹 Local video attached");
+    if (track.kind === "video" && localVideoRef.current) {
+      console.log("📺 Local video ref exists:", !!localVideoRef.current);
+
+      // Clear existing videos
+      const existingVideos = localVideoRef.current.querySelectorAll("video");
+      existingVideos.forEach((v) => v.remove());
+
+      try {
+        const videoElement = track.attach();
+        console.log("✅ Video element created:", videoElement);
+
+        // Set styles
+        videoElement.style.width = "100%";
+        videoElement.style.height = "100%";
+        videoElement.style.objectFit = "cover";
+        videoElement.style.transform = "scaleX(-1)"; // Mirror effect
+        videoElement.style.display = "block";
+        videoElement.autoplay = true;
+        videoElement.playsInline = true;
+
+        localVideoRef.current.appendChild(videoElement);
+        console.log("✅ Local video attached to DOM");
+        console.log(
+          "📊 Video dimensions:",
+          videoElement.videoWidth,
+          "x",
+          videoElement.videoHeight
+        );
+      } catch (err) {
+        console.error("❌ Error attaching local video:", err);
+      }
     }
   };
 
   const participantConnected = (participant) => {
+    console.log("🔗 Setting up participant:", participant.identity);
+
     setParticipants((prevParticipants) => {
       // Avoid duplicates
       if (prevParticipants.find((p) => p.sid === participant.sid)) {
@@ -145,6 +174,11 @@ export const useVideoCall = () => {
 
     // Attach existing published tracks
     participant.tracks.forEach((publication) => {
+      console.log(
+        "📦 Existing track publication:",
+        publication.kind,
+        publication.trackName
+      );
       if (publication.track) {
         attachRemoteTrack(publication.track);
       }
@@ -152,7 +186,7 @@ export const useVideoCall = () => {
 
     // Handle track subscriptions
     participant.on("trackSubscribed", (track) => {
-      console.log("🎬 Track subscribed:", track.kind);
+      console.log("🎬 Track subscribed:", track.kind, track.name);
       attachRemoteTrack(track);
     });
 
@@ -163,6 +197,8 @@ export const useVideoCall = () => {
   };
 
   const participantDisconnected = (participant) => {
+    console.log("👋 Cleaning up participant:", participant.identity);
+
     setParticipants((prevParticipants) =>
       prevParticipants.filter((p) => p.sid !== participant.sid)
     );
@@ -176,32 +212,60 @@ export const useVideoCall = () => {
   };
 
   const attachRemoteTrack = (track) => {
-    if (track.kind === "video" && remoteVideoRef.current) {
-      // Clear existing remote videos
-      while (remoteVideoRef.current.firstChild) {
-        remoteVideoRef.current.firstChild.remove();
-      }
+    console.log("🎬 Attaching remote track:", track.kind, track.name);
 
-      const videoElement = track.attach();
-      videoElement.style.width = "100%";
-      videoElement.style.height = "100%";
-      videoElement.style.objectFit = "cover";
-      remoteVideoRef.current.appendChild(videoElement);
-      console.log("📹 Remote video attached");
+    if (track.kind === "video" && remoteVideoRef.current) {
+      console.log("📺 Remote video ref exists:", !!remoteVideoRef.current);
+
+      // Clear existing remote videos
+      const existingVideos = remoteVideoRef.current.querySelectorAll("video");
+      existingVideos.forEach((v) => v.remove());
+
+      try {
+        const videoElement = track.attach();
+        console.log("✅ Remote video element created:", videoElement);
+
+        // Set styles
+        videoElement.style.width = "100%";
+        videoElement.style.height = "100%";
+        videoElement.style.objectFit = "cover";
+        videoElement.style.display = "block";
+        videoElement.autoplay = true;
+        videoElement.playsInline = true;
+
+        remoteVideoRef.current.appendChild(videoElement);
+        console.log("✅ Remote video attached to DOM");
+        console.log(
+          "📊 Video dimensions:",
+          videoElement.videoWidth,
+          "x",
+          videoElement.videoHeight
+        );
+      } catch (err) {
+        console.error("❌ Error attaching remote video:", err);
+      }
     } else if (track.kind === "audio") {
-      const audioElement = track.attach();
-      document.body.appendChild(audioElement);
-      console.log("🔊 Remote audio attached");
+      try {
+        const audioElement = track.attach();
+        audioElement.autoplay = true;
+        document.body.appendChild(audioElement);
+        console.log("✅ Remote audio attached");
+      } catch (err) {
+        console.error("❌ Error attaching remote audio:", err);
+      }
     }
   };
 
   const detachRemoteTrack = (track) => {
+    console.log("🗑️ Detaching remote track:", track.kind);
     track.detach().forEach((element) => {
       element.remove();
     });
   };
 
   const cleanupRoom = () => {
+    console.log("🧹 Cleaning up room...");
+
     // Clear video containers
     if (localVideoRef.current) {
       localVideoRef.current.innerHTML = "";
@@ -262,6 +326,7 @@ export const useVideoCall = () => {
   useEffect(() => {
     return () => {
       if (room) {
+        console.log("🧹 Component unmounting, cleaning up...");
         room.disconnect();
         cleanupRoom();
       }
