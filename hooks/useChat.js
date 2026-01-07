@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import chatsData from '../data/chats';
+import { useEffect, useState } from "react";
+import chatsData from "../data/chats";
 
 export const useChat = () => {
   const [chats, setChats] = useState(chatsData);
@@ -12,28 +12,33 @@ export const useChat = () => {
     };
 
     checkMobileView();
-    window.addEventListener('resize', checkMobileView);
+    window.addEventListener("resize", checkMobileView);
 
-    return () => window.removeEventListener('resize', checkMobileView);
+    return () => window.removeEventListener("resize", checkMobileView);
   }, []);
 
   const addMessage = (message) => {
     if (!selectedChat) return;
 
-    setChats(chats.map(chat =>
-      chat.id === selectedChat.id
-        ? {
-          ...chat,
-          messages: [...chat.messages, message],
-          lastMessage: message.text || message.type === 'image' ? '📷 Photo' : '🎤 Voice message',
-          time: 'now'
-        }
-        : chat
-    ));
+    setChats(
+      chats.map((chat) =>
+        chat.id === selectedChat.id
+          ? {
+              ...chat,
+              messages: [...chat.messages, message],
+              lastMessage:
+                message.text || message.type === "image"
+                  ? "📷 Photo"
+                  : "🎤 Voice message",
+              time: "now",
+            }
+          : chat
+      )
+    );
 
     setSelectedChat({
       ...selectedChat,
-      messages: [...selectedChat.messages, message]
+      messages: [...selectedChat.messages, message],
     });
   };
 
@@ -42,6 +47,6 @@ export const useChat = () => {
     selectedChat,
     setSelectedChat,
     isMobileView,
-    addMessage
+    addMessage,
   };
 };

@@ -1,28 +1,28 @@
-import React, { useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, X } from "lucide-react";
+import { useEffect } from "react";
 
 const ImageModal = ({ images, currentIndex, onClose, onIndexChange }) => {
   useEffect(() => {
     // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft' && currentIndex > 0) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && currentIndex > 0) {
         onIndexChange(currentIndex - 1);
       }
-      if (e.key === 'ArrowRight' && currentIndex < images.length - 1) {
+      if (e.key === "ArrowRight" && currentIndex < images.length - 1) {
         onIndexChange(currentIndex + 1);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentIndex, images.length, onClose, onIndexChange]);
 
   const handlePrevious = () => {
@@ -38,7 +38,7 @@ const ImageModal = ({ images, currentIndex, onClose, onIndexChange }) => {
   };
 
   const handleDownload = () => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = images[currentIndex];
     link.download = `image-${currentIndex + 1}.jpg`;
     link.click();
@@ -114,8 +114,8 @@ const ImageModal = ({ images, currentIndex, onClose, onIndexChange }) => {
                 onClick={() => onIndexChange(idx)}
                 className={`flex-shrink-0 rounded-lg overflow-hidden transition ${
                   idx === currentIndex
-                    ? 'ring-2 ring-white scale-110'
-                    : 'opacity-50 hover:opacity-100'
+                    ? "ring-2 ring-white scale-110"
+                    : "opacity-50 hover:opacity-100"
                 }`}
               >
                 <img

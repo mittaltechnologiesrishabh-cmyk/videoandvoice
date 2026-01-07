@@ -1,12 +1,11 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import { X } from "lucide-react";
 
 const ImagePreview = ({ images, onRemove }) => {
   if (images.length === 0) return null;
 
   return (
     <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50">
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto p-2">
         {images.map((img, index) => (
           <div key={index} className="relative flex-shrink-0">
             <img

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from "react";
 
 export const useVoiceRecording = (onRecordingComplete) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -21,10 +21,12 @@ export const useVoiceRecording = (onRecordingComplete) => {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
         const audioUrl = URL.createObjectURL(audioBlob);
         onRecordingComplete(audioUrl, recordingTime);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         setRecordingTime(0);
       };
 
@@ -33,11 +35,11 @@ export const useVoiceRecording = (onRecordingComplete) => {
       setRecordingTime(0);
 
       recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      alert('Please allow microphone access to record voice messages');
+      console.error("Error accessing microphone:", error);
+      alert("Please allow microphone access to record voice messages");
     }
   };
 
@@ -53,6 +55,6 @@ export const useVoiceRecording = (onRecordingComplete) => {
     isRecording,
     recordingTime,
     startRecording,
-    stopRecording
+    stopRecording,
   };
 };

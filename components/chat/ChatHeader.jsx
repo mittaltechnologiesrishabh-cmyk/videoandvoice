@@ -1,7 +1,12 @@
-import React from 'react';
-import { ArrowLeft, Phone, Video, Info } from 'lucide-react';
+import { ArrowLeft, Info, Phone, Video } from "lucide-react";
 
-const ChatHeader = ({ chat, onBack, isMobileView, onVoiceCall, onVideoCall }) => {
+const ChatHeader = ({
+  chat,
+  onBack,
+  isMobileView,
+  onVoiceCall,
+  onVideoCall,
+}) => {
   return (
     <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-white">
       <div className="flex items-center gap-2 sm:gap-3">
@@ -28,16 +33,22 @@ const ChatHeader = ({ chat, onBack, isMobileView, onVoiceCall, onVideoCall }) =>
         <div>
           <h3 className="font-semibold text-sm sm:text-base">{chat.user}</h3>
           <p className="text-xs text-gray-500">
-            {chat.online ? 'Active now' : 'Offline'}
+            {chat.online ? "Active now" : "Offline"}
           </p>
         </div>
       </div>
 
       <div className="flex gap-2 sm:gap-4">
-        <button onClick={onVoiceCall} className="p-2 hover:bg-gray-100 rounded-full transition">
+        <button
+          onClick={onVoiceCall}
+          className="p-2 hover:bg-gray-100 rounded-full transition"
+        >
           <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-[#2755ff]" />
         </button>
-        <button onClick={onVideoCall} className="p-2 hover:bg-gray-100 rounded-full transition">
+        <button
+          onClick={onVideoCall}
+          className="p-2 hover:bg-gray-100 rounded-full transition"
+        >
           <Video className="w-4 h-4 sm:w-5 sm:h-5 text-[#2755ff]" />
         </button>
         <button className="p-2 hover:bg-gray-100 rounded-full transition">
