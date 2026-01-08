@@ -49,6 +49,6 @@ export const useCallNotification = () => {
     notificationPermission,
     requestNotificationPermission,
     showSimpleNotification,
-    showCallNotification, 
+    showCallNotification, // Added this export
   };
 };
